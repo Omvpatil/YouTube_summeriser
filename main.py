@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (QApplication,QWidget,QPushButton,QLabel,QLineEdit,Q
                              QSplitter,QHBoxLayout,QVBoxLayout,QStatusBar)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon,QFont
-from transcriber import get_video_transcript,summarize_transcript,TranscriptsDisabled
+from transcriber import get_video_transcript, summarize_transcript, TranscriptsDisabled
 
 def resource_path(relative_path):
         try:
@@ -13,7 +13,7 @@ def resource_path(relative_path):
             base_path = os.path.abspath(".")
         return os.path.join(base_path, relative_path)
 
-class Myapp(Qwidget):
+class MyApp( QWidget ):
     def __init__(self):
         super()._init_()
         self.window_width,self.window_height = 700, 700
@@ -35,8 +35,9 @@ class Myapp(Qwidget):
         self.init_UI()
         self.config_signal()
 
+
 def init_UI(self):
-    #youtube videos ID input
+    # youtube videos ID input
     self.layout['Video_id_entry'] = QHBoxLayout()
     self.layout['main'].addlayout(self.layout['video_id_entry'])
     self.video_id_input = QLineEdit()
@@ -47,14 +48,14 @@ def init_UI(self):
     splitter = QSplitter(Qt.Orientation.Vertical)
     self.layout['main'].addwidget(splitter)
 
-    #insert input and output textbox
+    # insert input and output textbox
     self.transcription_field = QTextEdit()
     self.summarized_field = QTextEdit()
     splitter.addWidget(self.transcription_field)
     splitter.addWidget(self.summarized_field)
 
-    #prevent splitter to be completely closed
-    splitter.setCollapsible(0,False)
+    # prevent splitter to be completely closed
+    splitter.setCollapsible(0, False)
     splitter.setCollapsible(1, False)
 
     #add buttons

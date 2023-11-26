@@ -20,11 +20,13 @@ class Myapp(Qwidget):
         self.setMinimumsize(self.window_width, self.window_height)
         self.setWindowIcon(QIcon('./icon.png'))
         self.setWindowTitle('YouTube Video Summarize App')
+
         self.setStyleSheet('''
               Qwidget {
                     font-size: 14 px;
                     }
         ''')
+
 
         self.layout = {}
         self.layout['main'] = QVBoxLayout()
@@ -116,6 +118,7 @@ def config_signal(self):
     self.btn_transcribe.clicked.connect(self.summarized_video)
     self.btn_transcribe.clicked.connect(self.reset_fields)
 
+
 if __name__ == '__main__':
     API_key = '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'
     openai.api_key = API_key
@@ -126,9 +129,12 @@ if __name__ == '__main__':
     app.setstylesheet(qss_style.read())
 
     myApp = MyApp()
+
     myApp.show()
+
 
     try:
         sys.exit(app.exec())
     except SystemExit:
         print('Closing Window....')
+

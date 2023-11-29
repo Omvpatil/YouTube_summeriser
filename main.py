@@ -1,141 +1,134 @@
 import sys,os
 import openai
-from PyQt6.QtWidgets import (QApplication,QWidget,QPushButton,QLabel,QLineEdit,QTextEdit,
-                             QSplitter,QHBoxLayout,QVBoxLayout,QStatusBar)
+from config import OPENAI_API_KEY
+from PyQt6.QtWidgets import (QApplication, QWidget, QPushButton, QLabel, QLineEdit, QTextEdit,
+                             QSplitter, QHBoxLayout, QVBoxLayout, QStatusBar)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon,QFont
+from PyQt6.QtGui import QIcon, QFont
 from transcriber import get_video_transcript, summarize_transcript, TranscriptsDisabled
 
-def resource_path(relative_path):
-        try:
-            base_path= sys._MEIPASS
-        except Exception:
-            base_path = os.path.abspath(".")
-        return os.path.join(base_path, relative_path)
 
-class MyApp( QWidget ):
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
+class MyApp(QWidget):
     def __init__(self):
-        super()._init_()
-        self.window_width,self.window_height = 700, 700
-        self.setMinimumsize(self.window_width, self.window_height)
+        super().__init__()
+        self.window_width, self.window_height = 700, 700
+        self.setMinimumSize(self.window_width, self.window_height)
         self.setWindowIcon(QIcon('./icon.png'))
         self.setWindowTitle('YouTube Video Summarize App')
 
         self.setStyleSheet('''
-              Qwidget {
+              Widget {
                     font-size: 14 px;
                     }
         ''')
 
-
         self.layout = {}
         self.layout['main'] = QVBoxLayout()
-        self.setlayout(self.layout['main'])
+        self.setLayout(self.layout['main'])
 
         self.init_UI()
         self.config_signal()
 
+    def transcribe_video(self):
+        video_id = self.video_id_input.text()
+        if not video_id:
+            self.statusbar.showMessage('Video Id Is Missing')
+            return
+        self.statusbar.clearMessage()
+        self.transcription_field.clear()
+        self.summarized_field.clear()
 
-def init_UI(self):
-    # youtube videos ID input
-    self.layout['Video_id_entry'] = QHBoxLayout()
-    self.layout['main'].addlayout(self.layout['video_id_entry'])
-    self.video_id_input = QLineEdit()
-    self.layout['video_id_entry'].addwidget(QLabel('video ID: '))
-    self.layout['video_id_entry'].addwidget(self.video_id_input)
-    self.layout['video_id_entry'].addstretch(1)
+        try:
+            transcription = get_video_transcript(video_id)
+            self.transcription_field.setPlainText(transcription)
+        except TranscriptsDisabled:
+            self.statusbar.showMessage('Transcription not available')
+        except Exception as e:
+            self.statusbar.showMessage(str(e))
 
-    splitter = QSplitter(Qt.Orientation.Vertical)
-    self.layout['main'].addwidget(splitter)
+    def summarized_video(self):
+        transcription = self.transcription_field.toPlainText()
+        if not transcription:
+            self.statusbar.showMessage('Transcription is empty')
+        self.summarized_field.clear()
+        self.statusbar.clearMessage()
+        try:
+            video_summary = summarize_transcript(transcription)
+            self.summarized_field.setPlainText(video_summary)
+        except Exception as e:
+            self.statusbar.showMessage(str(e))
 
-    # insert input and output textbox
-    self.transcription_field = QTextEdit()
-    self.summarized_field = QTextEdit()
-    splitter.addWidget(self.transcription_field)
-    splitter.addWidget(self.summarized_field)
+    def init_UI(self):
+        # youtube videos ID input
+        self.layout['video_id_entry'] = QHBoxLayout()
+        self.layout['main'].addLayout(self.layout['video_id_entry'])
+        self.video_id_input = QLineEdit()
+        self.layout['video_id_entry'].addWidget(QLabel('video ID: '))
+        self.layout['video_id_entry'].addWidget(self.video_id_input)
+        self.layout['video_id_entry'].addStretch(1)
 
-    # prevent splitter to be completely closed
-    splitter.setCollapsible(0, False)
-    splitter.setCollapsible(1, False)
+        splitter = QSplitter(Qt.Orientation.Vertical)
+        self.layout['main'].addWidget(splitter)
 
-    #add buttons
-    self.layout['button'] = QHBoxLayout()
-    self.layout['main'].addLayout(self.layout['button'])
+        # insert input and output textbox
+        self.transcription_field = QTextEdit()
+        self.summarized_field = QTextEdit()
+        splitter.addWidget(self.transcription_field)
+        splitter.addWidget(self.summarized_field)
 
-    self.btn_transcribe = QPushButton('&Transcribe')
-    self.btn_transcribe.setFixedWidth(250)
-    self.btn_summarize = QPushButton('&Summarize')
-    self.btn_summarize.setFixedWidth(150)
-    self.btn_reset = QPushButton('&Rest')
-    self.btn_reset.setFixedWidth(150)
-    self.layout['button'].addWidget(self.btn_transcribe)
-    self.layout['button'].addWidget(self.btn_summarize)
-    self.layout['button'].addWidget(self.btn_reset)
-    self.layout['button'].addStretch()
+        # prevent splitter to be completely closed
+        splitter.setCollapsible(0, False)
+        splitter.setCollapsible(1, False)
 
-    #add status bar
-    self.statusbar = QStatusBar()
-    self.layout['main'].addwidget(self.statusbar)
+        # add buttons
+        self.layout['button'] = QHBoxLayout()
+        self.layout['main'].addLayout(self.layout['button'])
 
-def reset_fields(self):
-    self.video_id_input.clear()
-    self.transcription_field.clear()
-    self.summarized_field.clear()
-    self.statusbar.clearMessage()
+        self.btn_transcribe = QPushButton('&Transcribe')
+        self.btn_transcribe.setFixedWidth(250)
+        self.btn_summarize = QPushButton('&Summarize')
+        self.btn_summarize.setFixedWidth(150)
+        self.btn_reset = QPushButton('&Reset')
+        self.btn_reset.setFixedWidth(150)
+        self.layout['button'].addWidget(self.btn_transcribe)
+        self.layout['button'].addWidget(self.btn_summarize)
+        self.layout['button'].addWidget(self.btn_reset)
+        self.layout['button'].addStretch()
 
-def transcibe_video(self,video_id):
-    video_id = self.video_id_input.text()
-    if not video_id:
-        self.statusbar.showMessage('Video Id Is Missing')
-        return
+        # add status bar
+        self.statusbar = QStatusBar()
+        self.layout['main'].addWidget(self.statusbar)
 
-    self.statusbar.clearMessage()
-    self.transcription_field.clear()
-    self.summarized_field.clear()
+    def reset_fields(self):
+        self.video_id_input.clear()
+        self.transcription_field.clear()
+        self.summarized_field.clear()
+        self.statusbar.clearMessage()
 
-    try:
-        transcription = get_video_transcript(video_id)
-        self.input_field.setPlainText(transcription)
-    except TranscriptsDisabled:
-        self.statusbar.showMessage('Transcription not available')
-    except Exception as e:
-        self.statusbar.showMessage(str(e))
+    def config_signal(self):
+        self.btn_transcribe.clicked.connect(self.transcribe_video)
+        self.btn_summarize.clicked.connect(self.summarized_video)
+        self.btn_reset.clicked.connect(self.reset_fields)
 
-def summarize_video(self):
-    transcription = self.transcription_field.toPlainText()
-    if not transcription:
-        self.statusbar.showMessage('Transcription is empty')
-    self.summarized_field.clear()
-    self.statusbar.clearMessage()
+    if __name__ == '__main__':
+        API_key = os.getenv("api_key")
+        openai.api_key = API_key
 
-    try:
-        video_summary = summarize_transcript(transcription)
-        self.summarized_field.setPlainText(video_summary)
-    except Exception as e:
-        self.statusbar.showMessage(str(e))
+        app = QApplication(sys.argv)
 
-def config_signal(self):
-    self.btn_transcribe.clicked.connect(self.transcribe_video)
-    self.btn_transcribe.clicked.connect(self.summarized_video)
-    self.btn_transcribe.clicked.connect(self.reset_fields)
+myApp = MyApp()
+myApp.show()
 
-
-if __name__ == '__main__':
-    API_key = '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'
-    openai.api_key = API_key
-
-    app = QApplication(sys.argv)
-
-    qss_style = open(resource_path('dark_orange_style.qss'),'r')
-    app.setstylesheet(qss_style.read())
-
-    myApp = MyApp()
-
-    myApp.show()
-
-
-    try:
-        sys.exit(app.exec())
-    except SystemExit:
-        print('Closing Window....')
+try:
+    sys.exit(myApp.app.exec())
+except SystemExit:
+    print('Closing Window....')
 
